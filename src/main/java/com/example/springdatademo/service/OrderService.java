@@ -3,6 +3,7 @@ package com.example.springdatademo.service;
 import com.example.springdatademo.dto.OrderDto;
 import com.example.springdatademo.dto.OrderProductDto;
 import com.example.springdatademo.dto.ProductDto;
+import com.example.springdatademo.dto.ProductDtoList;
 import com.example.springdatademo.model.Order;
 import com.example.springdatademo.model.OrderProduct;
 import com.example.springdatademo.model.Product;
@@ -18,10 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Rest  service for program
+ */
 @Service
 @RestController
 @RequestMapping("order")
@@ -42,12 +45,24 @@ public class OrderService {
      * @return {@link OrderProductDto}
      */
     @GetMapping("{id}")
-    public OrderDto getById(@PathVariable int id) {
+    public List<ProductDto> getById(@PathVariable int id) {
         Optional<Order> order = orderRepository.findById(id);
 
-     
-        log.info("Order from database :" );
-        return null;
+
+        List<OrderProduct> orderProducts = order
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Order with id " + id + "wasn`t found"))
+                .getOrderProducts();
+
+        List<ProductDto> productDtoList = orderProducts
+                .stream()
+                .map(orderProduct -> objectMapper.convertValue(orderProduct.getProduct(), ProductDto.class))
+                .collect(Collectors.toList());
+
+        log.info("Order with id " + id + " was found");
+        productDtoList.forEach(productDto -> log.info("{} \t {} \t {}", productDto.getId(), productDto.getName(), productDto.getCost()));
+
+        return productDtoList;
     }
 
     /**
@@ -56,20 +71,30 @@ public class OrderService {
      * @return list {@link OrderProductDto}
      */
     @GetMapping("/get_all")
-    public List<OrderProductDto> getOrders() {
-        List<OrderProductDto> orderProducts = new ArrayList<>();
+    public Map<OrderDto, ProductDtoList> getOrders() {
+        Map<OrderDto, ProductDtoList> orderProducts = new HashMap<>();
         Iterable<OrderProduct> allOrders = orderProductRepository.findAll();
 
-
         allOrders.forEach(orderProduct -> {
-            OrderProductDto dto = objectMapper.convertValue(orderProduct, OrderProductDto.class);
-            orderProducts.add(dto);
+            OrderDto orderDto = objectMapper.convertValue(orderProduct.getOrder(), OrderDto.class);
+            ProductDto productDto = objectMapper.convertValue(orderProduct.getProduct(), ProductDto.class);
+
+            orderProducts.putIfAbsent(orderDto, new ProductDtoList());
+            orderProducts.get(orderDto).getProductDtoList().add(productDto);
         });
 
-        log.info("Orders from database :");
-        orderProducts.forEach(product -> log.info("{}  {} " + product.getOrder() + product.getProduct()));
-        return orderProducts;
+        log.info("Orders from database");
+        Set<Map.Entry<OrderDto, ProductDtoList>> entries = orderProducts.entrySet();
+        entries.forEach(entry -> {
+            log.info(entry.getKey().toString());
 
+            ProductDtoList value = entry.getValue();
+            value
+                    .getProductDtoList()
+                    .forEach(productDto ->
+                            log.info("{} \t {} \t {}", productDto.getId(), productDto.getName(), productDto.getCost()));
+        });
+        return orderProducts;
     }
 
     /**
@@ -96,6 +121,8 @@ public class OrderService {
         float cost = order.get().getCost() + product.get().getCost();
 
         orderRepository.updateCost(order.get().getId(), cost);
+
+        log.info("Product " + productName + " was added to the order number " + id);
     }
 
     /**
@@ -110,6 +137,9 @@ public class OrderService {
         order.orElseThrow(() -> new EntityNotFoundException("Order with id " + id + "wasn`t found"));
 
         orderRepository.deleteById(id);
+
+        log.info("order with id " + id + " was deleted");
+
         return objectMapper.convertValue(order, OrderDto.class);
     }
 
@@ -122,5 +152,7 @@ public class OrderService {
         order.setCost(0.0f);
         order.setCreationDate(LocalDate.now());
         orderRepository.save(order);
+
+        log.info("New order was placed");
     }
 }

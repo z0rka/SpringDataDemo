@@ -6,7 +6,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Repository of the {@link Product}
+ */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-     Optional<Product> findByName(String name);
+    /**
+     * Search by name method
+     *
+     * @param name - product name
+     */
+    Optional<Product> findByName(String name);
 }

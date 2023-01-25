@@ -8,9 +8,12 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository of the {@link Order}
+ */
 @Repository
 public interface OrderRepository extends CrudRepository<Order, Integer> {
     @Modifying
     @Query("update Order u set u.cost = ?2 where u.id = ?1")
-    void updateCost(@Param("id") int id,@Param("cost") float cost);
+    void updateCost(@Param("id") int id, @Param("cost") float cost);
 }

@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * Class DTO for {@link com.example.springdatademo.model.Order}
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

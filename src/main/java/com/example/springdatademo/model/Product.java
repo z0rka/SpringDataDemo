@@ -1,5 +1,6 @@
 package com.example.springdatademo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,9 @@ import org.hibernate.annotations.Parameter;
 
 import java.util.List;
 
+/**
+ * Class Product that works as entity for table product
+ */
 @NoArgsConstructor
 @Getter
 @Setter
@@ -28,6 +32,7 @@ public class Product {
     private String name;
     private float cost;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product",fetch = FetchType.EAGER)
+    @JsonIgnore
     List<OrderProduct> orderProducts;
 }

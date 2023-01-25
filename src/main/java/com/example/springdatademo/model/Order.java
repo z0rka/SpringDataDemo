@@ -1,5 +1,6 @@
 package com.example.springdatademo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,9 @@ import org.hibernate.annotations.Parameter;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Class Order that works as entity for table order
+ */
 @NoArgsConstructor
 @Getter
 @Setter
@@ -31,5 +35,6 @@ public class Order {
     private float cost;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<OrderProduct> orderProducts;
 }
